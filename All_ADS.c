@@ -4253,7 +4253,7 @@ int main() {
 typedef struct Node {
     int data;
     struct Node *left, *right;
-    int isThreaded;
+    int leftIsThreaded, rightIsThreaded;
 } Node;
 
 // Function to create a new node
@@ -4261,11 +4261,11 @@ Node* createNode(int data) {
     Node* newNode = (Node*)malloc(sizeof(Node));
     newNode->data = data;
     newNode->left = newNode->right = NULL;
-    newNode->isThreaded = 0;
+    newNode->leftIsThreaded = newNode->rightIsThreaded = 1;
     return newNode;
 }
 
-// Function to insert a node in inorder threaded binary tree
+// Function to insert a node in double-threaded binary tree
 void insert(Node** root, int data) {
     Node* newNode = createNode(data);
 
@@ -4281,50 +4281,77 @@ void insert(Node** root, int data) {
         parent = current;
 
         if (data < current->data) {
-            if (current->left == NULL) {
-                current->left = newNode;
+            if (!current->leftIsThreaded) {
+                current = current->left;
+            } else {
+                newNode->left = current->left;
                 newNode->right = current;
-                newNode->isThreaded = 1;
+                current->left = newNode;
+                current->leftIsThreaded = 0;
                 return;
             }
-            current = current->left;
         } else {
-            if (current->isThreaded || current->right == NULL) {
-                if (current->isThreaded) {
-                    newNode->right = current->right;
-                    newNode->isThreaded = 1;
-                }
+            if (!current->rightIsThreaded) {
+                current = current->right;
+            } else {
+                newNode->right = current->right;
+                newNode->left = current;
                 current->right = newNode;
-                current->isThreaded = 0;
+                current->rightIsThreaded = 0;
                 return;
             }
-            current = current->right;
         }
     }
 }
 
-// Function to perform preorder traversal of inorder threaded binary tree
+// Function to find the leftmost node
+Node* leftMost(Node* root) {
+    if (root == NULL) return NULL;
+
+    while (root->left != NULL && !root->leftIsThreaded) {
+        root = root->left;
+    }
+
+    return root;
+}
+
+// Function to perform inorder traversal of double-threaded binary tree
+void inorderTraversal(Node* root) {
+    Node* current = leftMost(root);
+
+    while (current != NULL) {
+        printf("%d ", current->data);
+
+        if (current->rightIsThreaded) {
+            current = current->right;
+        } else {
+            current = leftMost(current->right);
+        }
+    }
+}
+
+// Function to perform preorder traversal of double-threaded binary tree
 void preorderTraversal(Node* root) {
     if (root == NULL) {
         return;
     }
 
     Node* current = root;
-    Node* stack[100]; // Stack to store nodes
-    int top = -1;     // Initialize stack as empty
+    while (current != NULL) {
+        printf("%d ", current->data);
 
-    while (current != NULL || top != -1) {
-        while (current != NULL) {
-            printf("%d ", current->data);
-            if (current->left != NULL) {
-                stack[++top] = current; // Push current node to stack
-            }
+        if (!current->leftIsThreaded && current->left != NULL) {
             current = current->left;
-        }
-
-        if (top != -1) {
-            current = stack[top--]; // Pop from stack
+        } else if (!current->rightIsThreaded && current->right != NULL) {
             current = current->right;
+        } else {
+            // Traverse up using the threaded links
+            while (current != NULL && current->rightIsThreaded) {
+                current = current->right;
+            }
+            if (current != NULL) {
+                current = current->right;
+            }
         }
     }
 }
@@ -4335,8 +4362,9 @@ int main() {
 
     while (1) {
         printf("\n1. Insert\n");
-        printf("2. Preorder Traversal\n");
-        printf("3. Exit\n");
+        printf("2. Inorder Traversal\n");
+        printf("3. Preorder Traversal\n");
+        printf("4. Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
 
@@ -4347,11 +4375,16 @@ int main() {
                 insert(&root, value);
                 break;
             case 2:
+                printf("Inorder traversal: ");
+                inorderTraversal(root);
+                printf("\n");
+                break;
+            case 3:
                 printf("Preorder traversal: ");
                 preorderTraversal(root);
                 printf("\n");
                 break;
-            case 3:
+            case 4:
                 exit(0);
             default:
                 printf("Invalid choice\n");
