@@ -4406,92 +4406,120 @@ int main() {
 
 28. Write a Program to create Inorder Threaded Binary Tree and Traverse it in Inorder way
 
-#include <stdio.h>
-#include <stdlib.h>
+#include<stdio.h>
+#include<stdlib.h>
 
-struct Node {
-    int data;
-    struct Node* left;
-    struct Node* right;
-    int isThreaded;
+struct node{
+    int val;
+    int lbit; 
+    int rbit;
+    struct node *left, *right;
 };
 
-struct Node* createNode(int data) {
-    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
-    if (!newNode) {
-        printf("Memory allocation error!\n");
-        exit(1);
+struct node* insertTBT(struct node *head, int data){
+    struct node *temp,*p;
+    temp = (struct node*)malloc(sizeof(struct node));
+    temp->lbit = temp->rbit = 0;
+    temp->val = data;
+    if(head->lbit == 0){
+        head->left = temp;
+        temp->left = temp->right = head;
+        head->lbit = 1;
+        return head;
     }
-    newNode->data = data;
-    newNode->left = newNode->right = NULL;
-    newNode->isThreaded = 0;
-    return newNode;
+    p = head->left;
+
+    while(1){
+        if(data < p->val && p->lbit == 1){
+            p = p->left;
+        }
+        else if(data > p->val && p->rbit == 1){
+            p = p->right;
+        }
+        else{
+            break;
+        }
+    }
+
+    if(data < p->val){
+        temp->right = p;
+        temp->left = p->left;
+        p->left = temp;
+        p->lbit = 1;
+    }
+
+    if(data > p->val){
+        temp->left = p;
+        temp->right = p->right;
+        p->right = temp;
+        p->rbit = 1;
+    }
+    return head;
 }
 
-struct Node* insert(struct Node* root, int data) {
-    if (root == NULL) {
-        return createNode(data);
-    }
-    if (data < root->data) {
-        root->left = insert(root->left, data);
-    } else if (data > root->data) {
-        root->right = insert(root->right, data);
-    }
-    return root;
-}
+void inorderTBT(struct node *root) {
+    struct node *temp = root->left;
 
-struct Node* leftMost(struct Node* node) {
-    if (node == NULL) {
-        return NULL;
+    while(temp->lbit == 1){
+        temp = temp->left;
     }
-    while (node->left != NULL) {
-        node = node->left;
-    }
-    return node;
-}
 
-void createThreaded(struct Node* root, struct Node** prev) {
-    if (root == NULL) {
-        return;
-    }
-    createThreaded(root->left, prev);
-    if (*prev != NULL && (*prev)->right == NULL) {
-        (*prev)->right = root;
-        (*prev)->isThreaded = 1;
-    }
-    *prev = root;
-    createThreaded(root->right, prev);
-}
-
-void inorderTraversal(struct Node* root) {
-    struct Node* current = leftMost(root);
-    while (current != NULL) {
-        printf("%d ", current->data);
-        if (current->isThreaded) {
-            current = current->right;
-        } else {
-            current = leftMost(current->right);
+    while(temp != root){
+        printf("%d - ",temp->val);
+        if(temp->rbit == 1){
+            temp = temp->right;
+            while(temp->lbit == 1){
+                temp = temp->left;
+            }
+        }
+        else{
+            temp = temp->right;
         }
     }
 }
 
-int main() {
-    struct Node* root = NULL;
-    root = insert(root, 6);
-    insert(root, 3);
-    insert(root, 8);
-    insert(root, 1);
-    insert(root, 5);
-    insert(root, 7);
-    insert(root, 9);
+int main(){
+    int data;
+    struct node* head = (struct node*)malloc(sizeof(struct node));
+    head->lbit = 0;
+    head->rbit = 1;
+    head->left = head->right = head;
 
-    struct Node* prev = NULL;
-    createThreaded(root, &prev);
+    int choice;
+    int x;
+    
+    while(1) {
+        printf("\n\n\t Threaded Binary Tree Menu:\n\n");
+        printf("1. Create TBT\n");
+        printf("2. Insert node \n");
+        printf("3. Inorder Traversal\n");
+        printf("4. Exit\n");
+        printf("\n\nEnter your choice: ");
+        scanf("%d", &choice);
 
-    printf("Inorder traversal: ");
-    inorderTraversal(root);
-    printf("\n");
-
+        switch(choice) {
+            case 1:
+                printf("Enter the how many nodes :");
+                scanf("%d",&x);
+                break;
+            case 2:
+                printf("\nEnter the data : ");
+                for(int i=0; i<x; i++){
+                    scanf("%d",&data);
+                    head = insertTBT(head, data);
+                }
+                break;
+            case 3:
+                printf("\nInorder Traversal: ");
+                inorderTBT(head);
+                break;
+            case 4:
+                printf("Exiting...\n");
+                exit(0);
+            default:
+                printf("Invalid choice. Please enter a valid option.\n");
+        }
+    }
     return 0;
 }
 
