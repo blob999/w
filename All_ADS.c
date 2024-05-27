@@ -4145,6 +4145,164 @@ int main() {
 
 
 
+25. Write a Program to create a Binary Search Tree and display its mirror image with and without disturbing the original tree. Also display height of a tree using nonrecursion.
+
+#include <stdio.h>
+#include <stdlib.h>
+
+// Node structure for Binary Search Tree
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+// Function to create a new node
+struct Node* createNode(int data) {
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    if (newNode == NULL) {
+        printf("Memory allocation failed!\n");
+        exit(1);
+    }
+    newNode->data = data;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+// Function to insert a new node into BST
+struct Node* insert(struct Node* root, int data) {
+    if (root == NULL) {
+        return createNode(data);
+    }
+    if (data < root->data) {
+        root->left = insert(root->left, data);
+    } else if (data > root->data) {
+        root->right = insert(root->right, data);
+    }
+    return root;
+}
+
+// Function to display inorder traversal of the tree
+void inorderTraversal(struct Node* root) {
+    if (root == NULL) {
+        return;
+    }
+    inorderTraversal(root->left);
+    printf("%d ", root->data);
+    inorderTraversal(root->right);
+}
+
+// Function to modify the original tree to its mirror image
+void mirrorTreeWithChange(struct Node* root) {
+    if (root == NULL) {
+        return;
+    }
+    // Swap left and right subtrees
+    struct Node* temp = root->left;
+    root->left = root->right;
+    root->right = temp;
+    // Recursively mirror left subtree
+    mirrorTreeWithChange(root->left);
+    // Recursively mirror right subtree
+    mirrorTreeWithChange(root->right);
+}
+
+// Function to find the height of the tree using a non-recursive approach
+int height(struct Node* root) {
+    if (root == NULL) {
+        return 0;
+    }
+    int h = 0;
+    struct Node* queue[1000]; // Queue to perform level order traversal
+    int front = 0, rear = -1;
+    queue[++rear] = root;
+    while (front <= rear) {
+        int nodeCount = rear - front + 1; // Number of nodes at current level
+        while (nodeCount--) {
+            struct Node* current = queue[front++];
+            if (current->left) {
+                queue[++rear] = current->left;
+            }
+            if (current->right) {
+                queue[++rear] = current->right;
+            }
+        }
+        h++; // Increment height after traversing each level
+    }
+    return h;
+}
+
+// Function to deallocate memory of the tree
+void freeTree(struct Node* root) {
+    if (root == NULL) {
+        return;
+    }
+    freeTree(root->left);
+    freeTree(root->right);
+    free(root);
+}
+
+int main() {
+    struct Node* root = NULL;
+    int choice, data;
+
+    // Menu-driven interface
+    while (1) {
+        printf("\n\nBinary Search Tree Operations:\n");
+        printf("1. Insert element\n");
+        printf("2. Display original tree\n");
+        printf("3. Display mirror image of the tree\n");
+        printf("4. Modify original tree to mirror image\n");
+        printf("5. Find height of the tree\n");
+        printf("6. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter data to insert: ");
+                scanf("%d", &data);
+                root = insert(root, data);
+                break;
+            case 2:
+                printf("Inorder traversal of the original tree: ");
+                inorderTraversal(root);
+                printf("\n");
+                break;
+            case 3:
+                printf("Inorder traversal of the mirror image tree: ");
+                mirrorTreeWithChange(root);
+                inorderTraversal(root);
+                printf("\n");
+                mirrorTreeWithChange(root); // Restore original tree
+                break;
+            case 4:
+                printf("Inorder traversal of the modified original tree (mirror image): ");
+                mirrorTreeWithChange(root);
+                inorderTraversal(root);
+                printf("\n");
+                break;
+            case 5:
+                printf("Height of the tree: %d\n", height(root));
+                break;
+            case 6:
+                freeTree(root); // Deallocate memory before exit
+                exit(0);
+            default:
+                printf("Invalid choice! Please enter a valid option.\n");
+        }
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+
+
 
 
 26. Write a program to efficiently search a particular employee record by using Tree data structure. Also sort the data on emp-id.in ascending order
